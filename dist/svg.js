@@ -11,14 +11,17 @@
 
     var svgAttr = [
         'fill',
+        'transform',
         // line
         'x1', 'x2', 'y1', 'y2',
         // circle
         'cx', 'cy', 'r', 'rx', 'ry',
         // rects
         'x', 'y', 'width', 'height',
+        // polygons
+        'points',
         // path
-        'd', 'stroke-dasharray', 'stroke-dashoffset',
+        'd', 'stroke-dasharray', 'stroke-dashoffset', 'stroke', 'stroke-color',
         // general
         'id'
     ];
@@ -72,6 +75,10 @@
 
             var path = new svgPath.Path();
 
+            if (o.arc == 1) {
+                o.arc -= 0.0001;
+            }
+
             var r1 = o.radius.inner;
             var r2 = o.radius.outer;
             var r3 = (angular.isNumber(textPath) ? textPath : o.radius.text);
@@ -110,6 +117,55 @@
             return path.toString();
         };
     }]);
+
+    module.filter('svgRadialProgress', ['$filter', function($filter){
+        return function(progress, options, textPath) {
+            var defaults = {
+                center: {
+                    x: '50',
+                    y: '50'
+                },
+                radius: {
+                    inner: 30,
+                    outer: 36,
+                    text: 40
+                },
+                arc: 0,
+                offset: 0
+            };
+
+            if (angular.isDefined(options)) {
+                options = angular.extend(defaults, options);
+            } else {
+                options = defaults;
+            }
+
+            options.arc = Math.max(Math.min(progress, 1), 0);
+
+            return $filter('svgDonutSlice')(options, textPath);
+        };
+    }]);
+
+    module.filter('projection', function(){
+        return function(point, bounding) {
+            var result = [-(point[0]-bounding.mid[0])*bounding.scale + 240, (point[1]-bounding.mid[1])*bounding.scale + 320];
+            if (angular.isDefined(bounding.rotate) && bounding.rotate) {
+                return result.reverse();
+            } else {
+                return result;
+            }
+        };
+    });
+
+    module.filter('svgPoints', function($filter){
+        return function(points, projection, reverse) {
+            var tmpPoints = [];
+            for(var n=0; n<points.length; n++) {
+                tmpPoints.push( $filter('projection')(points[n], projection).join(',') );
+            }
+            return tmpPoints.join(' ');
+        };
+    });
 
     module.service('svgPath', function(){
         var Service = this;
