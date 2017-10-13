@@ -26,6 +26,8 @@
         'id'
     ];
 
+    var numericAttr = ['x1','x2','y1','y2','x','y','width','height','r','cx','cy','rx','ry'];
+
     angular.forEach(svgAttr, function(name) {
         var tmpName = name.split('-');
         var ngName = 'svg';
@@ -36,6 +38,16 @@
         module.directive(ngName, function(){
             return function(scope, element, attrs) {
                 attrs.$observe(ngName, function(value){
+
+                    if ( numericAttr.indexOf(name) > -1 ) {
+                        // parse numeric
+                        if (value == 'NaN%') {
+                            value = '0%';
+                        } else if (value == 'NaN') {
+                            value = 0;
+                        }
+                        value = parseFloat(value.replace('/[^\d%-]/g', ''));
+                    }
                     attrs.$set(name, value);
                 });
             };
