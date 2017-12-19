@@ -46,7 +46,9 @@
                         } else if (value == 'NaN') {
                             value = 0;
                         }
-                        value = parseFloat(value.replace('/[^\d%-]/g', ''));
+                            
+                        var percent = value.indexOf('%') > -1;
+                        value = parseFloat(value.replace('/[^\d%-]/g', '')) + (percent ? '%' : '');
                     }
                     attrs.$set(name, value);
                 });
